@@ -75,6 +75,15 @@
     </div>
 </section>
 
+<div class="modal-overlay" id="video-modal">
+    <div class="modal-content">
+        <button type="button" class="modal-close" id="video-modal-close" aria-label="Close video">&times;</button>
+        <div class="modal-video-wrapper">
+            <iframe id="video-modal-iframe" src="" title="See how Spendly works" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
 <section class="features">
     <div class="features-inner">
         <div class="feature-card">
@@ -103,4 +112,39 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var VIDEO_EMBED_URL = "https://www.youtube.com/embed/dQw4w9WgXcQ";
+
+        var openBtn = document.getElementById("how-it-works-btn");
+        var modal = document.getElementById("video-modal");
+        var closeBtn = document.getElementById("video-modal-close");
+        var iframe = document.getElementById("video-modal-iframe");
+
+        function openModal(event) {
+            event.preventDefault();
+            iframe.src = VIDEO_EMBED_URL + "?autoplay=1";
+            modal.classList.add("is-open");
+        }
+
+        function closeModal() {
+            modal.classList.remove("is-open");
+            iframe.src = "";
+        }
+
+        openBtn.addEventListener("click", openModal);
+        closeBtn.addEventListener("click", closeModal);
+
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) closeModal();
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+        });
+    })();
+</script>
 {% endblock %}
