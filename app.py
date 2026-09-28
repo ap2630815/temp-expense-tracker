@@ -3,7 +3,7 @@ import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
+from database.db import get_db, init_db, seed_db, create_user, get_user_by_email, get_user_by_id
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev-secret-key-change-in-production"  # dev only
@@ -19,11 +19,17 @@ with app.app_context():
 
 @app.route("/")
 def landing():
-    return render_template("landing.html")
+    current_user = None
+    if "user_id" in session:
+        current_user = get_user_by_id(session["user_id"])
+    return render_template("landing.html", current_user=current_user)
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    if session.get("user_id"):
+        return redirect(url_for("landing"))
+
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
@@ -57,6 +63,9 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if session.get("user_id"):
+        return redirect(url_for("landing"))
+
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
@@ -71,9 +80,15 @@ def login():
             return render_template("login.html", error="Invalid email or password.")
 
         session["user_id"] = user["id"]
-        return redirect(url_for("profile"))
+        return redirect(url_for("landing"))
 
     return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.pop("user_id", None)
+    return redirect(url_for("landing"))
 
 
 @app.route("/terms")
@@ -89,11 +104,6 @@ def privacy():
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/logout")
-def logout():
-    return "Logout — coming in Step 3"
-
 
 @app.route("/profile")
 def profile():
