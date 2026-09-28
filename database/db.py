@@ -115,6 +115,22 @@ def get_user_by_email(email, conn=None):
     return row
 
 
+def get_user_by_id(user_id, conn=None):
+    own_conn = conn is None
+    if own_conn:
+        conn = get_db()
+
+    try:
+        row = conn.execute(
+            "SELECT * FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
+    finally:
+        if own_conn:
+            conn.close()
+
+    return row
+
+
 if __name__ == "__main__":
     conn = get_db()
     init_db(conn)
