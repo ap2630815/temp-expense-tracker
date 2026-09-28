@@ -1,56 +1,60 @@
 # Spec: Registration
 
 ## Overview
-This step wires up real account creation and sign-in for Spendly. `GET /register` and `GET /login` already render their templates, but submitting either form does nothing yet — there is no server-side handling, no password hashing check, and no session. This step adds `POST` handling to both routes so a visitor can create an account and be signed in, and so an existing user can sign back in. It establishes the session mechanism that every later step (logout, profile, expenses) depends on to know who is currently logged in.
+Implement user registration so new visitors can create a Spendly account. This step upgrades the existing stub `GET /register` route into a fully functional form that accepts a POST, validates input, hashes the password, and inserts a new row into the `users` table. On success the user is shown with a success message and then redirected to the login page. This is the entry point for all authenticated features that follow.
 
 ## Depends on
-- Step 1 — Database setup (`users` table, `get_db()`, password hashing with werkzeug) must be complete. It is.
+- Step 01 — Database setup (`users` table, `get_db()`)
 
 ## Routes
-- `GET /register` — renders the registration form — public (already implemented, unchanged)
-- `POST /register` — creates a new user, hashes the password, starts a session, redirects to `/profile` — public
-- `GET /login` — renders the sign-in form — public (already implemented, unchanged)
-- `POST /login` — verifies credentials, starts a session, redirects to `/profile` — public
+- `GET /register` — render registration form — public (already exists as stub, upgrade it)
+- `POST /register` — process registration form, insert user, redirect to `/login` — public
 
 ## Database changes
-No database changes. The `users` table from Step 1 already has everything needed (`name`, `email`, `password_hash`). Only new query helper functions are needed in `database/db.py`:
-- `create_user(name, email, password_hash)` — inserts a row, returns the new user id; must let a `sqlite3.IntegrityError` on duplicate email propagate so the route can catch it and show a friendly error
-- `get_user_by_email(email)` — returns the matching row or `None`
+No new tables or columns. The existing `users` table (id, name, email, password_hash, created_at) covers all requirements.
+
+A new DB helper must be added to `database/db.py`:
+- `create_user(name, email, password)` — hashes the password with `werkzeug`, inserts a row into `users`, returns the new user's `id`. Raises `sqlite3.IntegrityError` if the email is already taken (UNIQUE constraint).
 
 ## Templates
-- **Create:** none
-- **Modify:**
-  - `templates/register.html` — change `<form method="POST" action="/register">` to `action="{{ url_for('register') }}"` (currently hardcoded, violates the no-hardcoded-URLs rule)
-  - `templates/login.html` — change `<form method="POST" action="/login">` to `action="{{ url_for('login') }}"` (same issue)
+- **Modify**: `templates/register.html`
+  - Change the form `action` to `url_for('register')` with `method="post"`
+  - Add `name` attributes to all inputs: `name`, `email`, `password`, `confirm_password`
+  - Add a block to display a flash error message (e.g. "Email already registered", "Passwords do not match")
+  - Keep all existing visual design
 
 ## Files to change
-- `app.py` — add `app.config["SECRET_KEY"]`, add `methods=["GET", "POST"]` to `register` and `login`, implement form handling (validate input, call `db.py` helpers, set `session["user_id"]`, redirect)
-- `database/db.py` — add `create_user()` and `get_user_by_email()`
-- `templates/register.html` — fix form action
-- `templates/login.html` — fix form action
+- `app.py` — upgrade `register()` to handle `GET` and `POST`; add flash + redirect logic
+- `database/db.py` — add `create_user()` helper
+- `templates/register.html` — wire up form action/method and flash message display
 
 ## Files to create
 None.
 
 ## New dependencies
-No new dependencies. `werkzeug.security` (`generate_password_hash`, `check_password_hash`) is already available via Flask.
+No new dependencies. Uses `werkzeug.security` (already installed) and Flask's built-in `flash` / `redirect` / `url_for`.
 
 ## Rules for implementation
 - No SQLAlchemy or ORMs
-- Parameterised queries only
-- Passwords hashed with werkzeug (`generate_password_hash` on register, `check_password_hash` on login)
-- Use CSS variables — never hardcode hex values
+- Parameterised queries only — never use f-strings in SQL
+- Hash passwords with `werkzeug.security.generate_password_hash` — never store plaintext
+- `app.secret_key` must be set in `app.py` for `flash()` to work (use a hardcoded dev string for now)
+- Server-side validation must check:
+  1. All fields are non-empty
+  2. `password == confirm_password`
+  3. Email is not already registered (catch `sqlite3.IntegrityError`)
+- On any validation failure, re-render the form with a flashed error message — do not redirect
+- On success, `flash` a success message and `redirect` to `url_for('login')`
+- Use `abort(405)` if an unsupported HTTP method reaches the route
 - All templates extend `base.html`
-- No DB logic inline in routes — every query goes through `database/db.py`
-- Use Flask's `session` (cookie-based) to track `user_id`; no new session table
-- Re-render the same template with an `error` message on validation failure (empty fields, duplicate email, wrong password) instead of raising — both templates already have `{% if error %}` blocks ready to use
-- Do not implement `/logout` or `/profile` beyond their current stubs — they belong to Steps 3 and 4
+- Use CSS variables — never hardcode hex values
+- Use `url_for()` for every internal link — never hardcode URLs
 
 ## Definition of done
-- [ ] Submitting the register form with a new name/email/password creates a row in `users` with a hashed password and redirects to `/profile`
-- [ ] Submitting the register form with an email that already exists re-renders `register.html` with an error, and no duplicate row is created
-- [ ] Submitting the login form with the seeded demo account (`demo@spendly.com` / `demo123`) redirects to `/profile`
-- [ ] Submitting the login form with a wrong password re-renders `login.html` with an error
-- [ ] After a successful register or login, `session["user_id"]` is set (verifiable via a temporary print or the Flask debugger)
-- [ ] Both form actions use `url_for()`, not hardcoded paths
-- [ ] `python app.py` starts without errors on port 5001
+- [ ] `GET /register` renders the registration form without errors
+- [ ] Submitting the form with all valid fields creates a new user in `users` and redirects to `/login`
+- [ ] Submitting with mismatched passwords re-renders the form with an error message, no DB insert
+- [ ] Submitting with an already-registered email re-renders the form with "Email already registered" error
+- [ ] Submitting with any empty field re-renders the form with a validation error
+- [ ] Password is stored as a hash — never plaintext — verifiable by inspecting `spendly.db`
+- [ ] No duplicate user is created on repeated valid submissions with the same email
