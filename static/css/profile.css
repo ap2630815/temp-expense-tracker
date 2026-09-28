@@ -1,0 +1,184 @@
+/* ------------------------------------------------------------------ */
+/* Profile page                                                        */
+/* ------------------------------------------------------------------ */
+
+.profile-section {
+    padding: 3rem 2rem 5rem;
+}
+
+.profile-container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Info card */
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.profile-avatar {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-name {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+}
+
+.profile-email,
+.profile-member-since {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+}
+
+/* Section titles */
+
+.profile-section-title {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: var(--ink);
+    margin-bottom: 1rem;
+}
+
+.profile-stats .dashboard-stat-label {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+
+/* Two-column layout */
+
+.profile-columns {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Transaction table */
+
+.profile-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.profile-table th {
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+}
+
+.dashboard-stat-value,
+.profile-table td:nth-child(4),
+.category-bar-amount {
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Category badges */
+
+.category-badge {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.category-badge-food { background: var(--accent-light); color: var(--accent); }
+.category-badge-shopping { background: var(--accent-2-light); color: var(--accent-2); }
+.category-badge-bills { background: var(--info-light); color: var(--info); }
+.category-badge-health { background: var(--danger-light); color: var(--danger); }
+.category-badge-entertainment { background: var(--violet-light); color: var(--violet); }
+.category-badge-transport { background: var(--teal-light); color: var(--teal); }
+.category-badge-other { background: var(--border-soft); color: var(--ink-soft); }
+
+/* Category breakdown */
+
+.category-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.category-bar-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 70px;
+    align-items: center;
+    gap: 1rem;
+}
+
+.category-bar-label {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+}
+
+.category-bar-track {
+    height: 10px;
+    background: var(--border-soft);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.category-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+}
+
+.category-bar-food { background: var(--accent); }
+.category-bar-shopping { background: var(--accent-2); }
+.category-bar-bills { background: var(--info); }
+.category-bar-health { background: var(--danger); }
+.category-bar-entertainment { background: var(--violet); }
+.category-bar-transport { background: var(--teal); }
+.category-bar-other { background: var(--ink-soft); }
+
+.category-bar-amount {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    text-align: right;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+    .profile-columns { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .profile-section { padding: 2rem 1rem 3rem; }
+    .profile-header { flex-direction: column; text-align: center; }
+    .category-bar-row { grid-template-columns: 70px 1fr 60px; gap: 0.6rem; }
+    .profile-table { font-size: 0.85rem; }
+}

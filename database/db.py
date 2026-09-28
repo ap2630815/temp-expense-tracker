@@ -131,6 +131,80 @@ def get_user_by_id(user_id, conn=None):
     return row
 
 
+def get_expense_summary(user_id, conn=None):
+    own_conn = conn is None
+    if own_conn:
+        conn = get_db()
+
+    try:
+        totals = conn.execute(
+            "SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total "
+            "FROM expenses WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        top = conn.execute(
+            "SELECT category FROM expenses WHERE user_id = ? "
+            "GROUP BY category ORDER BY SUM(amount) DESC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+    finally:
+        if own_conn:
+            conn.close()
+
+    return {
+        "total_spent": totals["total"],
+        "transaction_count": totals["count"],
+        "top_category": top["category"] if top else None,
+    }
+
+
+def get_recent_transactions(user_id, limit=5, conn=None):
+    own_conn = conn is None
+    if own_conn:
+        conn = get_db()
+
+    try:
+        rows = conn.execute(
+            "SELECT date, description, category, amount FROM expenses "
+            "WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        if own_conn:
+            conn.close()
+
+    return rows
+
+
+def get_category_breakdown(user_id, conn=None):
+    own_conn = conn is None
+    if own_conn:
+        conn = get_db()
+
+    try:
+        rows = conn.execute(
+            "SELECT category, SUM(amount) AS total FROM expenses "
+            "WHERE user_id = ? GROUP BY category ORDER BY total DESC",
+            (user_id,),
+        ).fetchall()
+    finally:
+        if own_conn:
+            conn.close()
+
+    if not rows:
+        return []
+
+    max_total = rows[0]["total"]
+    return [
+        {
+            "category": row["category"],
+            "amount": row["total"],
+            "percent": round(row["total"] / max_total * 100),
+        }
+        for row in rows
+    ]
+
+
 if __name__ == "__main__":
     conn = get_db()
     init_db(conn)
