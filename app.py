@@ -1,8 +1,12 @@
-from flask import Flask, render_template
+import sqlite3
 
-from database.db import get_db, init_db, seed_db
+from flask import Flask, render_template, request, redirect, url_for, session
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = "dev-secret-key-change-in-production"  # dev only
 
 with app.app_context():
     init_db()
@@ -18,13 +22,57 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not name or not email or not password or not confirm_password:
+            return render_template("register.html", error="Please fill in all fields.")
+
+        if len(password) < 8:
+            return render_template(
+                "register.html", error="Password must be at least 8 characters."
+            )
+
+        if password != confirm_password:
+            return render_template("register.html", error="Passwords do not match.")
+
+        password_hash = generate_password_hash(password)
+        try:
+            user_id = create_user(name, email, password_hash)
+        except sqlite3.IntegrityError:
+            return render_template(
+                "register.html", error="An account with that email already exists."
+            )
+
+        session["user_id"] = user_id
+        return redirect(url_for("profile"))
+
     return render_template("register.html")
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            return render_template(
+                "login.html", error="Please enter your email and password."
+            )
+
+        user = get_user_by_email(email)
+        if user is None or not check_password_hash(user["password_hash"], password):
+            return render_template("login.html", error="Invalid email or password.")
+
+        session["user_id"] = user["id"]
+        return redirect(url_for("profile"))
+
     return render_template("login.html")
 
 
