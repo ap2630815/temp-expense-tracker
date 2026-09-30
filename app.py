@@ -1,7 +1,8 @@
+import calendar
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from database.db import (
@@ -124,8 +125,49 @@ def privacy():
     return render_template("privacy.html")
 
 
+def _today():
+    return date.today()
+
+
+def _parse_iso_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date().isoformat()
+    except (TypeError, ValueError):
+        return None
+
+
+def _months_back(today, months):
+    year, month_index = divmod(today.year * 12 + today.month - 1 - months, 12)
+    month = month_index + 1
+    day = min(today.day, calendar.monthrange(year, month)[1])
+    return date(year, month, day)
+
+
+def get_filter_presets(today):
+    end = today.isoformat()
+    return [
+        {"key": "this_month", "label": "This Month",
+         "date_from": today.replace(day=1).isoformat(), "date_to": end},
+        {"key": "last_3", "label": "Last 3 Months",
+         "date_from": _months_back(today, 3).isoformat(), "date_to": end},
+        {"key": "last_6", "label": "Last 6 Months",
+         "date_from": _months_back(today, 6).isoformat(), "date_to": end},
+        {"key": "all", "label": "All Time", "date_from": None, "date_to": None},
+    ]
+
+
+def resolve_date_filter(raw_from, raw_to):
+    date_from = _parse_iso_date(raw_from)
+    date_to = _parse_iso_date(raw_to)
+    if date_from is None or date_to is None:
+        return None, None, None
+    if date_from > date_to:
+        return None, None, "Start date must be before end date."
+    return date_from, date_to, None
+
+
 # ==== SECTION 1: TRANSACTIONS (subagent 1 only) ==== #
-def build_transactions(user_id):
+def build_transactions(user_id, date_from=None, date_to=None):
     return [
         {
             "date": datetime.strptime(row["date"], "%Y-%m-%d").strftime("%d %b %Y"),
@@ -133,22 +175,24 @@ def build_transactions(user_id):
             "category": row["category"],
             "amount": row["amount"],
         }
-        for row in get_recent_transactions(user_id, limit=10)
+        for row in get_recent_transactions(
+            user_id, limit=10, date_from=date_from, date_to=date_to
+        )
     ]
 # ==== END SECTION 1 ==== #
 
 
 # ==== SECTION 2: SUMMARY (subagent 2 only) ==== #
-def build_summary(user_id):
-    summary = get_expense_summary(user_id)
+def build_summary(user_id, date_from=None, date_to=None):
+    summary = get_expense_summary(user_id, date_from=date_from, date_to=date_to)
     summary["top_category"] = summary["top_category"] or "—"
     return summary
 # ==== END SECTION 2 ==== #
 
 
 # ==== SECTION 3: CATEGORY BREAKDOWN (subagent 3 only) ==== #
-def build_category_breakdown(user_id):
-    rows = get_category_breakdown(user_id)
+def build_category_breakdown(user_id, date_from=None, date_to=None):
+    rows = get_category_breakdown(user_id, date_from=date_from, date_to=date_to)
     if not rows:
         return []
     total = sum(item["amount"] for item in rows)
@@ -180,12 +224,30 @@ def profile():
         "member_since": created_at.strftime("%d %b %Y"),
     }
 
+    date_from, date_to, filter_error = resolve_date_filter(
+        request.args.get("date_from"), request.args.get("date_to")
+    )
+    if filter_error:
+        flash(filter_error)
+
+    presets = get_filter_presets(_today())
+    for preset in presets:
+        preset["active"] = (preset["date_from"], preset["date_to"]) == (date_from, date_to)
+    date_filter = {
+        "presets": presets,
+        "date_from": date_from,
+        "date_to": date_to,
+        "custom_active": date_from is not None
+        and not any(preset["active"] for preset in presets),
+    }
+
     return render_template(
         "profile.html",
         user=user,
-        summary=build_summary(user_id),
-        transactions=build_transactions(user_id),
-        category_breakdown=build_category_breakdown(user_id),
+        date_filter=date_filter,
+        summary=build_summary(user_id, date_from, date_to),
+        transactions=build_transactions(user_id, date_from, date_to),
+        category_breakdown=build_category_breakdown(user_id, date_from, date_to),
     )
 
 
