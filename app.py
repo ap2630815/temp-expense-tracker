@@ -124,6 +124,46 @@ def privacy():
     return render_template("privacy.html")
 
 
+# ==== SECTION 1: TRANSACTIONS (subagent 1 only) ==== #
+def build_transactions(user_id):
+    return [
+        {
+            "date": datetime.strptime(row["date"], "%Y-%m-%d").strftime("%d %b %Y"),
+            "description": row["description"] or row["category"],
+            "category": row["category"],
+            "amount": row["amount"],
+        }
+        for row in get_recent_transactions(user_id, limit=10)
+    ]
+# ==== END SECTION 1 ==== #
+
+
+# ==== SECTION 2: SUMMARY (subagent 2 only) ==== #
+def build_summary(user_id):
+    summary = get_expense_summary(user_id)
+    summary["top_category"] = summary["top_category"] or "—"
+    return summary
+# ==== END SECTION 2 ==== #
+
+
+# ==== SECTION 3: CATEGORY BREAKDOWN (subagent 3 only) ==== #
+def build_category_breakdown(user_id):
+    rows = get_category_breakdown(user_id)
+    if not rows:
+        return []
+    total = sum(item["amount"] for item in rows)
+    if not total:
+        return []
+    items = [dict(item) for item in rows]
+    for item in items:
+        item["pct"] = int(item["amount"] * 100 // total)
+    remainder = 100 - sum(item["pct"] for item in items)
+    if remainder:
+        max(items, key=lambda item: item["amount"])["pct"] += remainder
+    return items
+# ==== END SECTION 3 ==== #
+
+
 @app.route("/profile")
 def profile():
     if not session.get("user_id"):
@@ -140,26 +180,12 @@ def profile():
         "member_since": created_at.strftime("%d %b %Y"),
     }
 
-    summary = get_expense_summary(user_id)
-    summary["top_category"] = summary["top_category"] or "—"
-
-    transactions = [
-        {
-            "date": datetime.strptime(row["date"], "%Y-%m-%d").strftime("%d %b %Y"),
-            "description": row["description"] or row["category"],
-            "category": row["category"],
-            "amount": row["amount"],
-        }
-        for row in get_recent_transactions(user_id)
-    ]
-    category_breakdown = get_category_breakdown(user_id)
-
     return render_template(
         "profile.html",
         user=user,
-        summary=summary,
-        transactions=transactions,
-        category_breakdown=category_breakdown,
+        summary=build_summary(user_id),
+        transactions=build_transactions(user_id),
+        category_breakdown=build_category_breakdown(user_id),
     )
 
 
