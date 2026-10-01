@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — Spendly{% endblock %}
+
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="analytics-section">
+    <div class="analytics-card">
+        <img class="analytics-ornament analytics-ornament-top"
+             src="{{ url_for('static', filename='img/analytics/corner-ornament.svg') }}" alt="">
+        <img class="analytics-ornament analytics-ornament-bottom"
+             src="{{ url_for('static', filename='img/analytics/corner-ornament.svg') }}" alt="">
+
+        <div class="analytics-clock">
+            <img src="{{ url_for('static', filename='img/analytics/clock.svg') }}" alt="">
+        </div>
+
+        <span class="analytics-badge">Coming soon</span>
+
+        <h1 class="analytics-title">Advanced Analytics</h1>
+
+        <p class="analytics-description">
+            We're working on powerful insights and visualizations
+            to help you understand your spending patterns better.
+        </p>
+
+        <img class="analytics-progress"
+             src="{{ url_for('static', filename='img/analytics/progress.svg') }}" alt="">
+
+        <p class="analytics-message">We're crafting something special</p>
+    </div>
+</section>
+{% endblock %}

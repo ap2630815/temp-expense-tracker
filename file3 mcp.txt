@@ -1,0 +1,84 @@
+# Claude Code x MCP
+
+### SQLite MCP Server
+
+Link - https://github.com/executeautomation/mcp-database-server
+
+`claude mcp add --transport stdio sqlite -- npx -y @executeautomation/database-server /home/ab/Desktop/expense-tracker/spendly.db`
+
+Examples
+
+- List all tables in the Spendly database
+- Describe the schema of the expenses table
+- Show total spending grouped by category
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+
+### Figma MCP Server
+
+Link - https://help.figma.com/hc/en-us/articles/39888612464151-Claude-Code-and-Figma-Set-up-the-MCP-server#h_01KPPEJMXTZGNJS32R62SCME0S
+
+`claude plugin install figma@claude-plugins-official`
+
+Examples
+
+I want to add an Analytics module to the Spendly
+expense tracker app.
+
+Here is the Figma design for the Coming Soon page: [https://www.figma.com/make/bwpDyazGwcTBRcDzeiB28E/Coming-Soon-Page-Wireframe?t=ivsBvjNIpbH1nBnA-6]
+
+Please do the following:
+
+1. Read the Figma design and convert it to a
+Jinja2 HTML template (analytics.html) that
+matches the design exactly
+2. Add an "Analytics" menu item to the navbar
+in base.html (or wherever the navbar is defined)
+    - The Analytics menu item should only be visible
+    to logged in users in the navbar
+3. Create a Flask route in app.py for /analytics
+that renders the coming soon page
+    - Protect this route so only logged in users
+    can access it
+    - If a logged out user tries to visit /analytics
+    directly via URL, redirect them to the login page
+4. Make sure the active state of the navbar
+highlights "Analytics" when on that page
+
+Keep the styling consistent with the existing
+Spendly design and use the same CSS patterns
+already in the project. Use whatever authentication
+mechanism is already being used in app.py
+(session, flask-login, etc.) — do not introduce
+a new auth library.
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+
+### GitHub MCP Server
+
+Link - https://github.com/github/github-mcp-server/blob/main/docs/installation-guides/install-claude.md
+
+**Create a GitHub Personal Access Token**
+
+1. Go to **github.com → Settings → Developer Settings → Personal Access Tokens → Fine-grained tokens**
+2. Click **Generate new token**
+3. Give it a name, set expiration, and select permissions:
+    - `repo` — read/write repos, PRs, issues
+    - `workflow` — trigger GitHub Actions
+4. Click **Generate** and **copy it immediately**
+
+`export PAT=<REDACTED-GITHUB-TOKEN>`
+
+`claude mcp add --transport http github https://api.githubcopilot.com/mcp -H "Authorization: Bearer $PAT"`
+
+Examples
+
+- Which is my most starred repo
+- how many open issues are there, give me a summary
+- Commit all changes with an appropriate conventional commit message, push to the current feature branch, 
+  create a pull request into main with a proper title and description based on the spec, 
+  merge it using squash merge, switch to main, pull latest, and delete the feature branch locally.
+
+
