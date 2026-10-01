@@ -1,0 +1,123 @@
+/* ------------------------------------------------------------------ */
+/* Analytics page (coming soon)                                        */
+/* Dimensions come from the Figma frame (272x254 card); --scale        */
+/* enlarges the whole composition while keeping its proportions.       */
+/* ------------------------------------------------------------------ */
+
+.analytics-section {
+    --scale: 1.6;
+    --analytics-green: #23493e;
+    display: flex;
+    justify-content: center;
+    padding: 3rem 2rem 5rem;
+    background: #f5f5f5;
+}
+
+.analytics-card {
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    width: calc(272px * var(--scale));
+    max-width: 100%;
+    height: calc(254px * var(--scale));
+    padding-top: calc(22px * var(--scale));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fff;
+    border-radius: calc(12px * var(--scale));
+    box-shadow: 0 calc(7px * var(--scale)) calc(9px * var(--scale)) calc(-2px * var(--scale)) rgba(30, 48, 42, 0.14);
+    font-family: "Inter", var(--font-body), sans-serif;
+    text-align: center;
+}
+
+.analytics-ornament {
+    position: absolute;
+    width: calc(84px * var(--scale));
+    height: calc(84px * var(--scale));
+}
+
+.analytics-ornament-top {
+    top: calc(-42px * var(--scale));
+    right: calc(-42px * var(--scale));
+}
+
+.analytics-ornament-bottom {
+    bottom: calc(-42px * var(--scale));
+    left: calc(-42px * var(--scale));
+}
+
+.analytics-clock {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(51px * var(--scale));
+    height: calc(51px * var(--scale));
+    background: var(--analytics-green);
+    border-radius: calc(10px * var(--scale));
+    box-shadow: 0 calc(6px * var(--scale)) calc(14px * var(--scale)) rgba(23, 54, 45, 0.21);
+}
+
+.analytics-clock img {
+    width: calc(23px * var(--scale));
+    height: calc(23px * var(--scale));
+}
+
+.analytics-badge {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: calc(74px * var(--scale));
+    height: calc(20px * var(--scale));
+    margin-top: calc(17px * var(--scale));
+    background: var(--analytics-green);
+    border-radius: calc(10px * var(--scale));
+    color: #fff;
+    font-size: calc(6.2px * var(--scale));
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.analytics-title {
+    position: relative;
+    margin: calc(11px * var(--scale)) 0 0;
+    color: var(--analytics-green);
+    font-family: inherit;
+    font-size: calc(15.5px * var(--scale));
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.analytics-description {
+    position: relative;
+    max-width: calc(228px * var(--scale));
+    margin: calc(10px * var(--scale)) 0 0;
+    color: #67777c;
+    font-size: calc(8px * var(--scale));
+    line-height: 1.45;
+}
+
+.analytics-progress {
+    position: relative;
+    width: calc(30px * var(--scale));
+    height: calc(7px * var(--scale));
+    margin-top: calc(22px * var(--scale));
+}
+
+.analytics-message {
+    position: relative;
+    margin: calc(10px * var(--scale)) 0 0;
+    color: #b8c1c4;
+    font-size: calc(6.2px * var(--scale));
+}
+
+@media (max-width: 600px) {
+    .analytics-section {
+        --scale: 1.2;
+        padding: 2rem 1rem 3rem;
+    }
+}

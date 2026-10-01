@@ -110,6 +110,11 @@ a { color: inherit; text-decoration: none; }
 .nav-links a { color: var(--ink-muted); transition: color 0.2s; }
 .nav-links a:hover { color: var(--ink); }
 
+.nav-links a.is-active {
+    color: var(--ink);
+    box-shadow: 0 2px 0 var(--accent);
+}
+
 .nav-username { color: var(--ink); font-weight: 500; }
 
 .nav-cta {
@@ -455,7 +460,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media (max-width: 600px) {
-    .nav-links a:not(.nav-cta) { display: none; }
+    .nav-links a:not(.nav-cta):not(.nav-link-analytics) { display: none; }
     .nav-username { display: none; }
 
     .legal-section { padding: 2rem 1rem 3rem; }
