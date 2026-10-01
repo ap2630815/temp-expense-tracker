@@ -1,0 +1,23 @@
+/* ------------------------------------------------------------------ */
+/* Add expense page                                                    */
+/* Form, card and button styles are reused from style.css.             */
+/* ------------------------------------------------------------------ */
+
+.add-expense-optional {
+    color: var(--ink-faint);
+    font-weight: 400;
+}
+
+.add-expense-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.add-expense-actions .btn-submit {
+    flex: 1;
+}
+
+.add-expense-actions .btn-ghost {
+    padding: 0.75rem 1.25rem;
+}

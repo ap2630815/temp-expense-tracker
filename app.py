@@ -1,6 +1,7 @@
 import calendar
 import sqlite3
 from datetime import date, datetime
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,6 +11,8 @@ from database.db import (
     init_db,
     seed_db,
     create_user,
+    create_expense,
+    EXPENSE_CATEGORIES,
     get_user_by_email,
     get_user_by_id,
     get_expense_summary,
@@ -251,13 +254,101 @@ def profile():
     )
 
 
+MAX_EXPENSE_AMOUNT = Decimal("10000000")
+MAX_DESCRIPTION_LENGTH = 200
+
+
+def _validate_expense_form(form):
+    amount_text = form["amount"]
+    if not amount_text:
+        return None, "Amount is required."
+    try:
+        amount = Decimal(amount_text)
+    except InvalidOperation:
+        return None, "Amount must be a number."
+    if not amount.is_finite():
+        return None, "Amount must be a number."
+    if amount <= 0:
+        return None, "Amount must be greater than 0."
+    if amount > MAX_EXPENSE_AMOUNT:
+        return None, "Amount is too large."
+    amount = amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    if amount <= 0:
+        return None, "Amount must be greater than 0."
+
+    if form["category"] not in EXPENSE_CATEGORIES:
+        return None, "Please choose a valid category."
+
+    expense_date = _parse_iso_date(form["date"])
+    if expense_date is None:
+        return None, "Enter a valid date."
+    if expense_date > _today().isoformat():
+        return None, "Date cannot be in the future."
+
+    description = form["description"]
+    if len(description) > MAX_DESCRIPTION_LENGTH:
+        return None, f"Description must be {MAX_DESCRIPTION_LENGTH} characters or fewer."
+
+    clean = {
+        "amount": float(amount),
+        "category": form["category"],
+        "date": expense_date,
+        "description": description or None,
+    }
+    return clean, None
+
+
+@app.route("/expenses/add", methods=["GET", "POST"])
+def add_expense():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    if get_user_by_id(session["user_id"]) is None:
+        session.pop("user_id", None)
+        return redirect(url_for("login"))
+
+    max_date = _today().isoformat()
+
+    if request.method == "POST":
+        form = {
+            key: request.form.get(key, "").strip()
+            for key in ("amount", "category", "date", "description")
+        }
+        clean, error = _validate_expense_form(form)
+        if error:
+            return render_template(
+                "add_expense.html",
+                error=error,
+                form=form,
+                categories=EXPENSE_CATEGORIES,
+                max_date=max_date,
+            )
+        create_expense(
+            session["user_id"],
+            clean["amount"],
+            clean["category"],
+            clean["description"],
+            clean["date"],
+        )
+        flash("Expense added.", "success")
+        return redirect(url_for("profile"))
+
+    form = {
+        "amount": "",
+        "category": "",
+        "date": max_date,
+        "description": "",
+    }
+    return render_template(
+        "add_expense.html",
+        form=form,
+        categories=EXPENSE_CATEGORIES,
+        max_date=max_date,
+    )
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/expenses/add")
-def add_expense():
-    return "Add expense — coming in Step 7"
 
 
 @app.route("/expenses/<int:id>/edit")
