@@ -18,10 +18,11 @@
                 <p class="profile-email">{{ user.email }}</p>
                 <p class="profile-member-since">Member since {{ user.member_since }}</p>
             </div>
+            <a class="btn-primary profile-add-btn" href="{{ url_for('add_expense') }}">Add expense</a>
         </div>
 
-        {% for message in get_flashed_messages() %}
-        <div class="auth-error" role="alert">{{ message }}</div>
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+        <div class="{{ 'flash-success' if category == 'success' else 'auth-error' }}" role="alert">{{ message }}</div>
         {% endfor %}
 
         <div class="auth-card profile-filter">

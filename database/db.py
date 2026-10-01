@@ -5,6 +5,16 @@ from werkzeug.security import generate_password_hash
 
 DB_PATH = Path(__file__).resolve().parent.parent / "spendly.db"
 
+EXPENSE_CATEGORIES = (
+    "Food",
+    "Transport",
+    "Bills",
+    "Health",
+    "Entertainment",
+    "Shopping",
+    "Other",
+)
+
 
 def get_db(db_path=None):
     conn = sqlite3.connect(db_path or DB_PATH)
@@ -129,6 +139,25 @@ def get_user_by_id(user_id, conn=None):
             conn.close()
 
     return row
+
+
+def create_expense(user_id, amount, category, description, date, conn=None):
+    own_conn = conn is None
+    if own_conn:
+        conn = get_db()
+
+    try:
+        cursor = conn.execute(
+            "INSERT INTO expenses (user_id, amount, category, description, date) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (user_id, amount, category, description, date),
+        )
+        conn.commit()
+    finally:
+        if own_conn:
+            conn.close()
+
+    return cursor.lastrowid
 
 
 def _date_clause(date_from, date_to):
