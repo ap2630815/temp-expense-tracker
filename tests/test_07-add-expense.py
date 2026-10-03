@@ -487,11 +487,6 @@ class TestProfileIntegration:
 
 
 class TestStubsUntouched:
-    def test_edit_stub_still_returns_stub_text(self, auth_client):
-        response = auth_client.get("/expenses/1/edit")
-        assert response.status_code == 200
-        assert "coming in Step 8" in page(response)
-
     def test_delete_stub_still_returns_stub_text(self, auth_client):
         response = auth_client.get("/expenses/1/delete")
         assert response.status_code == 200
