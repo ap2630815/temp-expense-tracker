@@ -106,6 +106,15 @@
     border-bottom: none;
 }
 
+.expense-edit-link {
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.expense-edit-link:hover {
+    text-decoration: underline;
+}
+
 /* Category badges */
 
 .category-badge {

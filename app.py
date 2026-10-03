@@ -3,7 +3,16 @@ import sqlite3
 from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import (
+    Flask,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from database.db import (
@@ -12,6 +21,8 @@ from database.db import (
     seed_db,
     create_user,
     create_expense,
+    get_expense_by_id,
+    update_expense,
     EXPENSE_CATEGORIES,
     get_user_by_email,
     get_user_by_id,
@@ -173,6 +184,7 @@ def resolve_date_filter(raw_from, raw_to):
 def build_transactions(user_id, date_from=None, date_to=None):
     return [
         {
+            "id": row["id"],
             "date": datetime.strptime(row["date"], "%Y-%m-%d").strftime("%d %b %Y"),
             "description": row["description"] or row["category"],
             "category": row["category"],
@@ -298,21 +310,32 @@ def _validate_expense_form(form):
     return clean, None
 
 
-@app.route("/expenses/add", methods=["GET", "POST"])
-def add_expense():
+def _require_valid_user():
     if not session.get("user_id"):
         return redirect(url_for("login"))
     if get_user_by_id(session["user_id"]) is None:
         session.pop("user_id", None)
         return redirect(url_for("login"))
+    return None
+
+
+def _read_expense_form():
+    return {
+        key: request.form.get(key, "").strip()
+        for key in ("amount", "category", "date", "description")
+    }
+
+
+@app.route("/expenses/add", methods=["GET", "POST"])
+def add_expense():
+    guard = _require_valid_user()
+    if guard:
+        return guard
 
     max_date = _today().isoformat()
 
     if request.method == "POST":
-        form = {
-            key: request.form.get(key, "").strip()
-            for key in ("amount", "category", "date", "description")
-        }
+        form = _read_expense_form()
         clean, error = _validate_expense_form(form)
         if error:
             return render_template(
@@ -358,9 +381,57 @@ def analytics():
 # ------------------------------------------------------------------ #
 
 
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    guard = _require_valid_user()
+    if guard:
+        return guard
+
+    user_id = session["user_id"]
+    expense = get_expense_by_id(id, user_id)
+    if expense is None:
+        abort(404)
+
+    max_date = _today().isoformat()
+
+    if request.method == "POST":
+        form = _read_expense_form()
+        clean, error = _validate_expense_form(form)
+        if error:
+            return render_template(
+                "add_expense.html",
+                error=error,
+                form=form,
+                categories=EXPENSE_CATEGORIES,
+                max_date=max_date,
+                expense_id=id,
+            )
+        updated = update_expense(
+            id,
+            user_id,
+            clean["amount"],
+            clean["category"],
+            clean["description"],
+            clean["date"],
+        )
+        if updated == 0:
+            abort(404)
+        flash("Expense updated.", "success")
+        return redirect(url_for("profile"))
+
+    form = {
+        "amount": f"{expense['amount']:.2f}",
+        "category": expense["category"],
+        "date": expense["date"],
+        "description": expense["description"] or "",
+    }
+    return render_template(
+        "add_expense.html",
+        form=form,
+        categories=EXPENSE_CATEGORIES,
+        max_date=max_date,
+        expense_id=id,
+    )
 
 
 @app.route("/expenses/<int:id>/delete")

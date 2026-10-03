@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Add Expense — Spendly{% endblock %}
+{% block title %}{% if expense_id is defined %}Edit{% else %}Add{% endif %} Expense — Spendly{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/add_expense.css') }}">
@@ -10,8 +10,13 @@
 <section class="auth-section">
     <div class="auth-container">
         <div class="auth-header">
+            {% if expense_id is defined %}
+            <h1 class="auth-title">Edit expense</h1>
+            <p class="auth-subtitle">Update the details below and save your changes.</p>
+            {% else %}
             <h1 class="auth-title">Add expense</h1>
             <p class="auth-subtitle">Record a new expense to keep your dashboard up to date.</p>
+            {% endif %}
         </div>
 
         <div class="auth-card">
@@ -19,7 +24,7 @@
             <div class="auth-error" role="alert">{{ error }}</div>
             {% endif %}
 
-            <form method="post" action="{{ url_for('add_expense') }}">
+            <form method="post" action="{% if expense_id is defined %}{{ url_for('edit_expense', id=expense_id) }}{% else %}{{ url_for('add_expense') }}{% endif %}">
                 <div class="form-group">
                     <label for="amount">Amount (₹)</label>
                     <input type="number" id="amount" name="amount" class="form-input"
@@ -51,7 +56,7 @@
                 </div>
 
                 <div class="add-expense-actions">
-                    <button type="submit" class="btn-submit">Save expense</button>
+                    <button type="submit" class="btn-submit">{% if expense_id is defined %}Save changes{% else %}Save expense{% endif %}</button>
                     <a class="btn-ghost" href="{{ url_for('profile') }}">Cancel</a>
                 </div>
             </form>

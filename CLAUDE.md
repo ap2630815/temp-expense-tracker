@@ -85,7 +85,7 @@ GET /login	            Implemented — renders login.html
 GET /logout	            Stub — Step 3
 GET /profile	        Stub — Step 4
 GET/POST /expenses/add	Implemented — renders add_expense.html
-GET /expenses/<id>/edit	Stub — Step 8
+GET/POST /expenses/<id>/edit	Implemented — renders add_expense.html (edit mode)
 GET /expenses/<id>/delete	Stub — Step 9
 Do not implement a stub route unless the active task explicitly targets that step.
 

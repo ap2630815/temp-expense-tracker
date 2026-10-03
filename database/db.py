@@ -160,6 +160,43 @@ def create_expense(user_id, amount, category, description, date, conn=None):
     return cursor.lastrowid
 
 
+def get_expense_by_id(expense_id, user_id, conn=None):
+    own_conn = conn is None
+    if own_conn:
+        conn = get_db()
+
+    try:
+        row = conn.execute(
+            "SELECT * FROM expenses WHERE id = ? AND user_id = ?",
+            (expense_id, user_id),
+        ).fetchone()
+    finally:
+        if own_conn:
+            conn.close()
+
+    return row
+
+
+def update_expense(expense_id, user_id, amount, category, description, date, conn=None):
+    own_conn = conn is None
+    if own_conn:
+        conn = get_db()
+
+    try:
+        cursor = conn.execute(
+            "UPDATE expenses SET amount = ?, category = ?, description = ?, date = ? "
+            "WHERE id = ? AND user_id = ?",
+            (amount, category, description, date, expense_id, user_id),
+        )
+        conn.commit()
+        rowcount = cursor.rowcount
+    finally:
+        if own_conn:
+            conn.close()
+
+    return rowcount
+
+
 def _date_clause(date_from, date_to):
     clause = ""
     params = []
@@ -211,7 +248,7 @@ def get_recent_transactions(user_id, limit=5, date_from=None, date_to=None, conn
 
     try:
         rows = conn.execute(
-            "SELECT date, description, category, amount FROM expenses "
+            "SELECT id, date, description, category, amount FROM expenses "
             "WHERE user_id = ?" + date_sql +
             " ORDER BY date DESC, id DESC LIMIT ?",
             (user_id, *date_params, limit),
