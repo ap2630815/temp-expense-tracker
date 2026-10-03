@@ -23,6 +23,7 @@ from database.db import (
     create_expense,
     get_expense_by_id,
     update_expense,
+    delete_expense as remove_expense,
     EXPENSE_CATEGORIES,
     get_user_by_email,
     get_user_by_id,
@@ -376,11 +377,6 @@ def analytics():
     return render_template("analytics.html")
 
 
-# ------------------------------------------------------------------ #
-# Placeholder routes — students will implement these                  #
-# ------------------------------------------------------------------ #
-
-
 @app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
     guard = _require_valid_user()
@@ -434,9 +430,21 @@ def edit_expense(id):
     )
 
 
-@app.route("/expenses/<int:id>/delete")
+@app.route("/expenses/<int:id>/delete", methods=["POST"])
 def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+    guard = _require_valid_user()
+    if guard:
+        return guard
+
+    user_id = session["user_id"]
+    expense = get_expense_by_id(id, user_id)
+    if expense is None:
+        abort(404)
+
+    if remove_expense(id, user_id) == 0:
+        abort(404)
+    flash("Expense deleted.", "success")
+    return redirect(url_for("profile"))
 
 
 if __name__ == "__main__":

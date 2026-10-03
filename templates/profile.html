@@ -83,7 +83,11 @@
                             <td>{{ t.description }}</td>
                             <td><span class="category-badge category-badge-{{ t.category|lower }}">{{ t.category }}</span></td>
                             <td>₹{{ "{:,.2f}".format(t.amount) }}</td>
-                            <td><a class="expense-edit-link" href="{{ url_for('edit_expense', id=t.id) }}">Edit</a></td>
+                            <td class="expense-actions"><a class="expense-edit-link" href="{{ url_for('edit_expense', id=t.id) }}">Edit</a>
+                                <form class="expense-delete-form" method="post" action="{{ url_for('delete_expense', id=t.id) }}" data-confirm-delete>
+                                    <button type="submit" class="expense-delete-link">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -109,5 +113,16 @@
 
     </div>
 </section>
+
+<dialog class="confirm-dialog" id="delete-dialog" aria-labelledby="delete-dialog-title">
+    <div class="confirm-dialog-message">
+        <p class="confirm-dialog-title" id="delete-dialog-title">Delete this expense?</p>
+        <p class="confirm-dialog-text">This cannot be undone.</p>
+    </div>
+    <div class="confirm-dialog-actions">
+        <button type="button" class="btn-ghost" data-confirm-cancel>Cancel</button>
+        <button type="button" class="confirm-dialog-danger" data-confirm-ok>Delete</button>
+    </div>
+</dialog>
 
 {% endblock %}

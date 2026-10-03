@@ -633,13 +633,13 @@ class TestProfileIntegration:
         assert auth_client.get(match.group(1)).status_code == 200
 
 
-class TestStubsUntouched:
-    def test_delete_stub_still_returns_stub_text(self, auth_client, target_id):
+class TestDeleteRouteNoLongerStub:
+    def test_delete_get_is_not_the_old_stub(self, auth_client, target_id):
         response = auth_client.get(f"/expenses/{target_id}/delete")
-        assert response.status_code == 200
-        assert "coming in Step 9" in page(response)
+        assert response.status_code == 405
+        assert "coming in Step 9" not in page(response)
 
-    def test_delete_stub_does_not_delete(self, auth_client, target_id):
+    def test_delete_get_does_not_delete(self, auth_client, target_id):
         auth_client.get(f"/expenses/{target_id}/delete")
         assert get_row(target_id) is not None
 
