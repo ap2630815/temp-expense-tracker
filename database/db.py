@@ -197,6 +197,25 @@ def update_expense(expense_id, user_id, amount, category, description, date, con
     return rowcount
 
 
+def delete_expense(expense_id, user_id, conn=None):
+    own_conn = conn is None
+    if own_conn:
+        conn = get_db()
+
+    try:
+        cursor = conn.execute(
+            "DELETE FROM expenses WHERE id = ? AND user_id = ?",
+            (expense_id, user_id),
+        )
+        conn.commit()
+        rowcount = cursor.rowcount
+    finally:
+        if own_conn:
+            conn.close()
+
+    return rowcount
+
+
 def _date_clause(date_from, date_to):
     clause = ""
     params = []

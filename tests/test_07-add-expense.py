@@ -486,11 +486,11 @@ class TestProfileIntegration:
         assert "error" not in match.group(1)
 
 
-class TestStubsUntouched:
-    def test_delete_stub_still_returns_stub_text(self, auth_client):
-        response = auth_client.get("/expenses/1/delete")
-        assert response.status_code == 200
-        assert "coming in Step 9" in page(response)
+class TestDeleteRouteNoLongerStub:
+    def test_delete_requires_login(self, client):
+        response = client.post("/expenses/1/delete")
+        assert response.status_code == 302
+        assert "/login" in response.headers["Location"]
 
 
 # ------------------------------------------------------------------ #
